@@ -11,6 +11,7 @@ trainer_params = {
     'log_interval': 100, # 로그 찍어볼 미니배치 반복 수
     'is_string' : True, # 추론 결과물을 디코딩된 문장으로 반환할지, 토큰의 배열로 반환할지를 설정합니다.
     'seq_len': 10, # 모델 학습 기간
+    'sent_interval': 10
 }
 
 """ 하이퍼파라미터 설정 끝 """
@@ -29,7 +30,7 @@ class Trainer:
 
         self.best_loss = 100
 
-    def train_model(self, epoch_num=trainer_params['epoch_num'], log_interval = trainer_params['log_interval']):
+    def train_model(self, epoch_num=trainer_params['epoch_num'], log_interval = trainer_params['log_interval'], sent_interval = trainer_params['sent_interval']):
 
         assert self.model is not None, "Model is None"
         assert self.train_dataset is not None, "train_dataset is None"
@@ -46,21 +47,21 @@ class Trainer:
             for idx, data in enumerate(self.train_dataset):
                 self.model.train()
 
-                xs, ys = data # 데이터 분리
+                xs, original = data # 데이터 분리
 
-                ys = self.tokenizer.encode(ys) # 데이터 인코딩
+                ys = self.tokenizer.encode(original) # 데이터 인코딩
 
                 xs, ys = xs.to(self.device), ys.to(self.device)
 
                 self.optimizer.zero_grad() # 그래디언트 파라미터를 0으로 설정
 
-                output = self.model(xs, ys) # model.forward
+                output = self.model(xs, ys, teacher_force=True) # model.forward
 
                 # loss 계산을 위한 차원 변경
-                output = output.view(-1, self.model.output_dim)
-                ys = ys.view(-1)
+                new_output = output.view(-1, self.model.output_dim)
+                new_ys = ys.view(-1)
 
-                loss = self.criterion(output, ys) # evaluate loss
+                loss = self.criterion(new_output, new_ys) # evaluate loss
                 loss.backward() # backward pass
                 self.optimizer.step()
 
@@ -68,14 +69,21 @@ class Trainer:
                 training_loss += loss.item()
 
                 if idx % log_interval == log_interval-1:
-                    print(f"Training Epoch [{idx + 1}/{epoch_num}] iter : {idx} loss: {(training_loss / log_interval):.3f}")
+                    print(f"Training Epoch [{epoch + 1}/{epoch_num}] iter : {idx + 1} loss: {(training_loss / log_interval):.3f}")
                     result = self.validation()
 
                     if result:
-                        self.save_state('model/state', epoch, training_loss)
-                        
+                        self.save_state('./model/state.pth', epoch, training_loss)
+
                     training_loss = 0.0
 
+                if idx % sent_interval == 0:
+                    print("====== Train Sentence ======")
+                    output = output.permute(1,0,2)
+                    for i in range(10):
+                        print(f"Answer : {original[i]} / Predicted : {''.join(self.tokenizer.untokenize(output[i]))}")
+                        print(ys[i])
+                        print(output[i].argmax(1))
                 
 
 
@@ -107,8 +115,8 @@ class Trainer:
         print("====== sentence ======")
         for i in range(10):
             print(f"Answer : {original[i]} / Predicted : {''.join(self.tokenizer.untokenize(output[i]))}")
-        
         if validation_loss / (idx+1) < self.best_loss:
+            self.best_loss = validation_loss / (idx+1)
             return True # 저장하라고 알림
         else:
             return False
@@ -151,8 +159,8 @@ class Trainer:
         print("Save state to ", save_path)
         torch.save({
             'epoch': epoch,
-            'model_state_dict': model.state_dict(),
-            'optimizer_state_dict': optimizer.state_dict(),
+            'model_state_dict': self.model.state_dict(),
+            'optimizer_state_dict': self.optimizer.state_dict(),
             'loss': loss,
-            })
+            }, save_path)
 

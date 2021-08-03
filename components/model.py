@@ -20,7 +20,7 @@ encoder_params = {
 }
 
 decoder_params = {
-    'num_words': 1017, # dataset의 word2id의 길이와 동일해야 함
+    'num_words': 1016, # dataset의 word2id의 길이와 동일해야 함
     'embedding_dim': 256,
     'rnn_hidden_size': 128, # encoder의 fc_out과 동일해야 함
     'dropout_ratio': 0.5
@@ -103,7 +103,7 @@ class Model(nn.Module):
         """
 
         assert encoder_params['fc_out'] == decoder_params['rnn_hidden_size'], "encoder['fc_out'] and decoder['rnn_hidden_size'] must be same!!"
-        assert decoder_params['num_words'] == len(self.tokenizer.word2id) + 1, "'embedding_dim' dosen't have full words"
+        assert decoder_params['num_words'] == len(self.tokenizer.word2id), "'embedding_dim' dosen't have full words"
         assert self.tokenizer.seq_len == self.seq_len, "seq_len dosen't match!"
 
     def forward(self, x, y = None, teacher_force = teacher_force):
@@ -132,7 +132,7 @@ class Model(nn.Module):
 
             if teacher_force:
                 assert y is not None, "y should be needed if teacher_force"
-                input = y[:c]
+                input = y[:,c]
             else:
                 input = output.squeeze(0).argmax(dim= 1) # softmax 대용?
 

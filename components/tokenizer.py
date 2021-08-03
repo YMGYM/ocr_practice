@@ -15,15 +15,15 @@ class Tokenizer:
             self.word2id[c] = idx
             self.id2word[idx] = c
         
-        self.word2id['<SOS>'] = len(self.word2id) + 1 # start token
-        self.word2id['<EOS>'] = len(self.word2id) + 1 # end token
-        self.word2id['<PAD>'] = len(self.word2id) + 1 # padding token
-        self.word2id['<UNK>'] = len(self.word2id) + 1 # unknown token
+        self.word2id['<SOS>'] = idx+1 # start token
+        self.word2id['<EOS>'] = idx+2 # end token
+        self.word2id['<PAD>'] = idx+3 # padding token
+        self.word2id['<UNK>'] = idx+4 # unknown token
 
-        self.id2word[len(self.id2word) + 1] = '<SOS>'
-        self.id2word[len(self.id2word) + 1] = '<EOS>'
-        self.id2word[len(self.id2word) + 1] = '<PAD>'
-        self.id2word[len(self.id2word) + 1] = '<UNK>'
+        self.id2word[idx+1] = '<SOS>'
+        self.id2word[idx+2] = '<EOS>'
+        self.id2word[idx+3] = '<PAD>'
+        self.id2word[idx+4] = '<UNK>'
 
     def encode(self, input_str): # dataset output을 토크나이즈함
 

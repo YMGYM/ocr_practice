@@ -11,8 +11,7 @@ import torch.nn as nn
 모델을 학습합니다.
 """
 
-BATCH_SIZE = 1024
-
+BATCH_SIZE = 2048
 
 if __name__ == "__main__":
     # 데이터셋 경로 설정 =============
