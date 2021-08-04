@@ -13,6 +13,7 @@ trainer_params = {
     'seq_len': 10, # 모델의 sequence 길이
     'sent_interval': 10, # training 시에 문장 출력 에폭
     'optimizer_lr': 0.0001, # optimizer learning rate
+    'save_path' : './model/state.pth',
 }
 
 """ 하이퍼파라미터 설정 끝 """
@@ -34,7 +35,7 @@ class Trainer:
         # uniform 가중치 입력
         self.init_parameters()
 
-    def train_model(self, epoch_num=trainer_params['epoch_num'], log_interval = trainer_params['log_interval'], sent_interval = trainer_params['sent_interval']):
+    def train_model(self, epoch_num=trainer_params['epoch_num'], log_interval = trainer_params['log_interval'], sent_interval = trainer_params['sent_interval'], load_model=True):
 
         assert self.model is not None, "Model is None"
         assert self.train_dataset is not None, "train_dataset is None"
@@ -42,6 +43,12 @@ class Trainer:
         assert self.criterion is not None, "criterion is None"
         assert self.optimizer is not None, "optimizer is None"
         assert self.tokenizer is not None, "tokenizer is None"
+
+        # 학습된 모델을 불러옵니다.
+        if load_model:
+            epoch = self.load_model(trainer_params['save_path'])
+        else:
+            epoch = 0
 
         print("========== Start Training Model.... ==========")
     
@@ -61,11 +68,9 @@ class Trainer:
 
                 output = self.model(xs, ys, teacher_force=True) # model.forward
 
-                # loss 계산을 위한 차원 변경
-                new_output = output.view(-1, self.model.output_dim)
-                new_ys = ys.view(-1)
+                new_output = output.permute(1,2,0)
 
-                loss = self.criterion(new_output, new_ys) # evaluate loss
+                loss = self.criterion(new_output, ys) # evaluate loss
                 loss.backward() # backward pass
                 self.optimizer.step()
 
@@ -77,7 +82,7 @@ class Trainer:
                     result = self.validation()
 
                     if result:
-                        self.save_state('./model/state.pth', epoch, training_loss)
+                        self.save_state(trainer_params['save_path'], epoch, training_loss)
 
                     # training_loss = 0.0
 
@@ -87,9 +92,7 @@ class Trainer:
                     output = output.permute(1,0,2) # [batch, sequence, output_len]
                     for i in range(2):
                         print(f"Answer : {original[i]} / Predicted : {''.join(self.tokenizer.untokenize(output[i]))}")
-                        # print(ys[i])
-                        # print(output[i].argmax(1))
-                
+
 
 
     def validation(self):
@@ -101,16 +104,15 @@ class Trainer:
 
             ys = self.tokenizer.encode(original) # 데이터 인코딩
 
-            xs, new_ys = xs.to(self.device), ys.to(self.device)
+            xs, ys = xs.to(self.device), ys.to(self.device)
 
             self.optimizer.zero_grad() # 그래디언트 파라미터를 0으로 설정
 
             output = self.model(xs, teacher_force=False) # model.forward
 
-            new_output = output.view(-1, self.model.output_dim)
-            new_ys = new_ys.view(-1)
+            new_output = output.permute(1,2,0)
 
-            loss = self.criterion(new_output, new_ys) # evaluate loss
+            loss = self.criterion(new_output, ys) # evaluate loss
             validation_loss += loss.item()
 
             if idx > 2: break # 3번만 하고 브레이크
@@ -183,3 +185,16 @@ class Trainer:
     def init_parameters(self):
         for name, param in self.model.named_parameters():
             torch.nn.init.uniform_(param.data, -0.08, 0.08)
+
+
+    def load_model(self, load_path):
+        print("Load model from ", load_path)
+
+        checkpoint = torch.load(load_path)
+
+        self.model.load_state_dict(checkpoint['model_state_dict'])
+        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+        epoch = checkpoint['epoch']
+        self.best_loss = checkpoint['loss']
+
+        return epoch
