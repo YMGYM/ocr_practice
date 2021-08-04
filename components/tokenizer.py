@@ -100,7 +100,7 @@ class Tokenizer:
             result.append(word)
         return result
 
-    def untokenize(self, input_vec): # 단어 하나의 값을 예측 (입력값은 상수 배열 [1차원])
+    def untokenize(self, input_vec): # 단어 하나의 값을 예측 (입력값은 상수 배열 [seq_len, num_words])
         result = ""
 
         for char in input_vec: # <EOS>를 만날 때 까지 계속함
@@ -108,5 +108,5 @@ class Tokenizer:
                 break
             else:
                 result += self.id2word[char.argmax().item()]
-
+                
         return result

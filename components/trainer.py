@@ -7,11 +7,12 @@ Trainer
 
 """하이퍼파라미터 설정"""
 trainer_params = {
-    'epoch_num': 5, # 학습시킬 에폭 수
+    'epoch_num': 100, # 학습시킬 에폭 수
     'log_interval': 100, # 로그 찍어볼 미니배치 반복 수
     'is_string' : True, # 추론 결과물을 디코딩된 문장으로 반환할지, 토큰의 배열로 반환할지를 설정합니다.
-    'seq_len': 10, # 모델 학습 기간
-    'sent_interval': 10
+    'seq_len': 10, # 모델의 sequence 길이
+    'sent_interval': 10, # training 시에 문장 출력 에폭
+    'optimizer_lr': 0.0001, # optimizer learning rate
 }
 
 """ 하이퍼파라미터 설정 끝 """
@@ -24,11 +25,14 @@ class Trainer:
         self.train_dataset = train_dataset
         self.val_dataset = val_dataset
         self.criterion = criterion
-        self.optimizer = optimizer(self.model.parameters())
+        self.optimizer = optimizer(self.model.parameters(), lr=trainer_params['optimizer_lr'])
 
         self.tokenizer = tokenizer # 토크나이저 설정
 
         self.best_loss = 100
+
+        # uniform 가중치 입력
+        self.init_parameters()
 
     def train_model(self, epoch_num=trainer_params['epoch_num'], log_interval = trainer_params['log_interval'], sent_interval = trainer_params['sent_interval']):
 
@@ -69,21 +73,22 @@ class Trainer:
                 training_loss += loss.item()
 
                 if idx % log_interval == log_interval-1:
-                    print(f"Training Epoch [{epoch + 1}/{epoch_num}] iter : {idx + 1} loss: {(training_loss / log_interval):.3f}")
+                    print(f"Training Epoch [{epoch + 1}/{epoch_num}] iter : {idx + 1} loss: {(training_loss / (idx+1)):.3f}")
                     result = self.validation()
 
                     if result:
                         self.save_state('./model/state.pth', epoch, training_loss)
 
-                    training_loss = 0.0
+                    # training_loss = 0.0
 
                 if idx % sent_interval == 0:
+                    print(f"Training Epoch [{epoch + 1}/{epoch_num}] iter : {idx + 1} loss: {(training_loss / (idx+1)):.3f}")
                     print("====== Train Sentence ======")
-                    output = output.permute(1,0,2)
-                    for i in range(10):
+                    output = output.permute(1,0,2) # [batch, sequence, output_len]
+                    for i in range(2):
                         print(f"Answer : {original[i]} / Predicted : {''.join(self.tokenizer.untokenize(output[i]))}")
-                        print(ys[i])
-                        print(output[i].argmax(1))
+                        # print(ys[i])
+                        # print(output[i].argmax(1))
                 
 
 
@@ -112,9 +117,14 @@ class Trainer:
             
         print(f"validation loss : {(validation_loss/(idx+1)):0.5f}")
         output = output.permute(1,0,2).to('cpu') # 차원 변환 [batch, seq_len, class], cpu로 전송
+
+
         print("====== sentence ======")
-        for i in range(10):
+        for i in range(5):
             print(f"Answer : {original[i]} / Predicted : {''.join(self.tokenizer.untokenize(output[i]))}")
+        print("========== Finish Validation ========== ")
+
+
         if validation_loss / (idx+1) < self.best_loss:
             self.best_loss = validation_loss / (idx+1)
             return True # 저장하라고 알림
@@ -155,7 +165,7 @@ class Trainer:
         print("Save Model To ", save_path)
         torch.save(self.model.state_dict(), save_path)
 
-    def save_state(self, save_path, epoch, loss):
+    def save_state(self, save_path, epoch, loss): # 상태를 통으로 저장합니다.
         print("Save state to ", save_path)
         torch.save({
             'epoch': epoch,
@@ -164,3 +174,12 @@ class Trainer:
             'loss': loss,
             }, save_path)
 
+
+    
+    def count_parameters(self):
+        return sum(p.numel() for p in self.model.parameters() if p.requires_grad)
+
+
+    def init_parameters(self):
+        for name, param in self.model.named_parameters():
+            torch.nn.init.uniform_(param.data, -0.08, 0.08)
