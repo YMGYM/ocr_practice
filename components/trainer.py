@@ -13,7 +13,7 @@ trainer_params = {
     'seq_len': 10, # 모델의 sequence 길이
     'sent_interval': 10, # training 시에 문장 출력 에폭
     'optimizer_lr': 0.0001, # optimizer learning rate
-    'save_path' : './model/state.pth',
+    'save_path' : './model/state.pth', # 모델 저장 경로
 }
 
 """ 하이퍼파라미터 설정 끝 """
@@ -35,7 +35,7 @@ class Trainer:
         # uniform 가중치 입력
         self.init_parameters()
 
-    def train_model(self, epoch_num=trainer_params['epoch_num'], log_interval = trainer_params['log_interval'], sent_interval = trainer_params['sent_interval'], load_model=True):
+    def train_model(self, epoch_num=trainer_params['epoch_num'], log_interval = trainer_params['log_interval'], sent_interval = trainer_params['sent_interval'], save_path= trainer_params['save_path'], load_model=True):
 
         assert self.model is not None, "Model is None"
         assert self.train_dataset is not None, "train_dataset is None"
@@ -46,7 +46,7 @@ class Trainer:
 
         # 학습된 모델을 불러옵니다.
         if load_model:
-            epoch = self.load_model(trainer_params['save_path'])
+            epoch = self.load_model(save_path)
         else:
             epoch = 0
 
@@ -82,7 +82,7 @@ class Trainer:
                     result = self.validation()
 
                     if result:
-                        self.save_state(trainer_params['save_path'], epoch, training_loss)
+                        self.save_state(save_path, epoch, training_loss)
 
                     # training_loss = 0.0
 
@@ -187,14 +187,24 @@ class Trainer:
             torch.nn.init.uniform_(param.data, -0.08, 0.08)
 
 
-    def load_model(self, load_path):
+    # 모델과 가중치를 load 합니다.
+    # is_state : 모델 저장을 save_state로 했는지(True), save_model로 했는지 (False)
+    def load_model(self, load_path, is_state=True):
         print("Load model from ", load_path)
 
-        checkpoint = torch.load(load_path)
+        if is_state:
+            checkpoint = torch.load(load_path)
 
-        self.model.load_state_dict(checkpoint['model_state_dict'])
-        self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
-        epoch = checkpoint['epoch']
-        self.best_loss = checkpoint['loss']
+            self.model.load_state_dict(checkpoint['model_state_dict'])
+            self.optimizer.load_state_dict(checkpoint['optimizer_state_dict'])
+            epoch = checkpoint['epoch']
+            self.best_loss = checkpoint['loss']
+            return epoch
+            
+        else: # 모델만 저장함
+            checkpoint = torch.load(load_path)
+            self.model.load_state_dict(checkpoint)
+            return None
+        
 
-        return epoch
+    

@@ -38,7 +38,7 @@ class Encoder(nn.Module):
         # output = (64, 28, 96)
         self.pool = nn.MaxPool2d(2, 2) # output = (64, 14, 48)
         self.drop1 = nn.Dropout(encoder_params['dropout_ratio'])
-        self.conv2 = nn.Conv2d(encoder_params['conv1_out'], encoder_params['conv2_out'], encoder_params['conv2_kernel_size']) # output = (16, 10, 44) => (16, 5, 22)
+        self.conv2 = nn.Conv2d(encoder_params['conv1_out'], encoder_params['conv2_out'], encoder_params['conv2_kernel_size'])# output = (16, 10, 44) => (16, 5, 22)
         self.drop2 = nn.Dropout(encoder_params['dropout_ratio'])
 
         self.fc = nn.Linear(16*5*22, encoder_params['fc_out'])
@@ -62,19 +62,32 @@ class Decoder(nn.Module):
         self.params = decoder_params
         self.embedding = nn.Embedding(num_embeddings= decoder_params['num_words'], embedding_dim= decoder_params['embedding_dim'])
         self.dropout = nn.Dropout(decoder_params['dropout_ratio'])
-        self.rnn = nn.GRU(input_size= decoder_params['embedding_dim'], hidden_size = decoder_params['rnn_hidden_size'])
+        self.rnn = nn.GRU(input_size= decoder_params['embedding_dim'] + decoder_params['rnn_hidden_size'], hidden_size = decoder_params['rnn_hidden_size'])
 
-        self.fc_out = nn.Linear(128, decoder_params['num_words'])
+        self.fc_out = nn.Linear(decoder_params['rnn_hidden_size']*2, decoder_params['num_words'])
 
 
-    def forward(self, x, hidden):
-        # input : [batch,]
-        x = self.dropout(self.embedding(x)).unsqueeze(0) # output : [1, batch, embedding_dim]
+    def forward(self, x, hidden, context):
+        """
+        input : [batch,]
+        hidden : 이전 시간 rnn의 hidden state
+        context : Encoder의 통과 값
+        """
 
+        # 글자를 embedding 합니다.
+        x = self.dropout(self.embedding(x)).unsqueeze(0) # output : [1, batch, embedding_dim] 1은 sequence에서 1타임임을 의미
+
+        # embedding한 것과 context 벡터를 연결합니다.
+        x = torch.cat((x, context), dim = 2)
+
+        # 연결한 vector는 RNN의 input으로 들어갑니다.
         rnn_out, out_hidden = self.rnn(x, hidden)
 
         # rnn_out : [1, batch, h_out]
         # out_hidden : [1, batch, h_out]
+
+        # RNN의 output은 다시 context 벡터와 연결됩니다.
+        rnn_out = torch.cat((rnn_out, context), dim=2)
 
         output = self.fc_out(rnn_out) # out : [batch, num_words]
 
@@ -126,7 +139,7 @@ class Model(nn.Module):
         input = torch.tensor(input).repeat(batch_size).to(self.device) # batch 크기만큼 반복해서 증가시킴
 
         for c in range(0, self.seq_len):
-            output, hidden = self.decoder(input, hidden)
+            output, hidden = self.decoder(input, hidden, hidden)
 
             outputs[c] = output
 

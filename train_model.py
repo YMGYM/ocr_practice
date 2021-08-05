@@ -12,18 +12,18 @@ import torch.nn as nn
 """
 
 params = {
-    'epochs': 3,
+    'epochs': 100,
     'log_interval': 30, # validation 확인 정도
-    'sent_interval': 10, # 로그 찍어보는 반복 횟수
+    'sent_interval': 10, # 학습 중 모델 인식 결과물을 찍어 보는 주기
     'batch_size': 2048,
     'load_model': True, # 모델을 이어서 학습할 것인지
-
+    'save_path': './model/state_cat.pth' # 모델 저장 위치
 }
 
 # 데이터셋 경로 설정 =============
 base_dir = '../soma/font/dataset/'
 train_dir = base_dir + 'train/'
-val_dir = base_dir + 'val'
+val_dir = base_dir + 'val/'
 # ===========================
 
 
@@ -48,4 +48,4 @@ if __name__ == "__main__":
     
 
     print(f"{trainer.count_parameters()} trainable parameters")
-    trainer.train_model(epoch_num=params['epochs'], log_interval=params['log_interval'], sent_interval=params['sent_interval'], load_model=params['load_model'])
+    trainer.train_model(epoch_num=params['epochs'], log_interval=params['log_interval'], sent_interval=params['sent_interval'], save_path=params['save_path'], load_model=params['load_model'])
