@@ -1,4 +1,5 @@
 import torch
+from torch.utils.tensorboard import SummaryWriter
 """
 Trainer
 생성된 모든 객체들을 입력으로 받아 모델을 학습시킵니다.
@@ -34,6 +35,9 @@ class Trainer:
 
         # uniform 가중치 입력
         self.init_parameters()
+
+        # tensorboard 객체 생성
+        self.writer = SummaryWriter()
 
     def train_model(self, epoch_num=trainer_params['epoch_num'], log_interval = trainer_params['log_interval'], sent_interval = trainer_params['sent_interval'], save_path= trainer_params['save_path'], load_model=True):
 
@@ -79,12 +83,10 @@ class Trainer:
 
                 if idx % log_interval == log_interval-1:
                     print(f"Training Epoch [{epoch + 1}/{epoch_num}] iter : {idx + 1} loss: {(training_loss / (idx+1)):.3f}")
-                    result = self.validation()
+                    result = self.validation(idx*(epoch+1))
 
                     if result:
                         self.save_state(save_path, epoch, training_loss)
-
-                    # training_loss = 0.0
 
                 if idx % sent_interval == 0:
                     print(f"Training Epoch [{epoch + 1}/{epoch_num}] iter : {idx + 1} loss: {(training_loss / (idx+1)):.3f}")
@@ -92,10 +94,18 @@ class Trainer:
                     output = output.permute(1,0,2) # [batch, sequence, output_len]
                     for i in range(2):
                         print(f"Answer : {original[i]} / Predicted : {''.join(self.tokenizer.untokenize(output[i]))}")
+                        
+                        # Tensorboard 에 현재 상태 저장
+                        if i == 0:
+                            self.writer.add_image('predicted' + ''.join(self.tokenizer.untokenize(output[i])), xs[i])
+
+
+                    # Tensorboard 에 training_loss 기록
+                    self.writer.add_scalar('Loss/Train', (training_loss / (idx+1)), idx*(epoch+1)) # loss 기록
 
 
 
-    def validation(self):
+    def validation(self, iter_count):
         self.model.eval()
         print("========== Start Validation ... ========== ")
         validation_loss = 0.0
@@ -124,6 +134,14 @@ class Trainer:
         print("====== sentence ======")
         for i in range(5):
             print(f"Answer : {original[i]} / Predicted : {''.join(self.tokenizer.untokenize(output[i]))}")
+            # tensorboard에 현재 상태 저장
+            if i == 0:
+                self.writer.add_image('VALIDATION_predicted' + ''.join(self.tokenizer.untokenize(output[i])), xs[i])
+
+        # Tensorboard 에 validation_loss 기록
+        self.writer.add_scalar('Loss/Validation', (validation_loss/(idx+1)), iter_count) # loss 기록
+
+
         print("========== Finish Validation ========== ")
 
 
