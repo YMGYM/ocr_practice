@@ -15,14 +15,14 @@ encoder_params = {
     'conv1_kernel_size' : 4,
     'conv2_out': 16,
     'conv2_kernel_size': 4,
-    'fc_out': 128,
+    'fc_out': 256,
     'dropout_ratio': 0.5
 }
 
 decoder_params = {
     'num_words': 1016, # dataset의 word2id의 길이와 동일해야 함
-    'embedding_dim': 256,
-    'rnn_hidden_size': 128, # encoder의 fc_out과 동일해야 함
+    'embedding_dim': 512,
+    'rnn_hidden_size': 256, # encoder의 fc_out과 동일해야 함
     'dropout_ratio': 0.5
 }
 
