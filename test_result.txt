@@ -1,0 +1,5 @@
+/model 폴더에 모델 파일 결과 저장중
+
+state_big.pth : 파라미터 사이즈를 두 배로 증가시켜 훈련
+state.pth : 기본
+state_cat : CNN 네트워크 결과를 매 sequecne 마다 더해줌
