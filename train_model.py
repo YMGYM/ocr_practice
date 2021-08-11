@@ -17,7 +17,7 @@ params = {
     'sent_interval': 10, # 학습 중 모델 인식 결과물을 찍어 보는 주기
     'batch_size': 2048,
     'load_model': True, # 모델을 이어서 학습할 것인지
-    'save_path': './model/state_big.pth' # 모델 저장 위치
+    'save_path': './model/state_long_cnn.pth' # 모델 저장 위치
 }
 
 # 데이터셋 경로 설정 =============

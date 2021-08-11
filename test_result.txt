@@ -6,3 +6,6 @@ Training 데이터에서 학습 정체
 
 state.pth : 기본 (Aug06_15-39-40_jun-H81M-D2V)
 state_cat : CNN 네트워크 결과를 매 sequecne 마다 더해줌
+
+
+state_long_cnn: 

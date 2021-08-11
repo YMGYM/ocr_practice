@@ -21,7 +21,7 @@ encoder_params = {
 
 decoder_params = {
     'num_words': 1016, # dataset의 word2id의 길이와 동일해야 함
-    'embedding_dim': 512,
+    'embedding_dim': 256,
     'rnn_hidden_size': 256, # encoder의 fc_out과 동일해야 함
     'dropout_ratio': 0.5
 }
