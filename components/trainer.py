@@ -96,8 +96,8 @@ class Trainer:
                         print(f"Answer : {original[i]} / Predicted : {''.join(self.tokenizer.untokenize(output[i]))}")
                         
                         # Tensorboard 에 현재 상태 저장
-                        if i == 0:
-                            self.writer.add_image('predicted' + ''.join(self.tokenizer.untokenize(output[i])), xs[i])
+                        # if i == 0:
+                        #     self.writer.add_image('predicted' + ''.join(self.tokenizer.untokenize(output[i])), xs[i])
 
 
                     # Tensorboard 에 training_loss 기록
@@ -135,8 +135,8 @@ class Trainer:
         for i in range(5):
             print(f"Answer : {original[i]} / Predicted : {''.join(self.tokenizer.untokenize(output[i]))}")
             # tensorboard에 현재 상태 저장
-            if i == 0:
-                self.writer.add_image('VALIDATION_predicted' + ''.join(self.tokenizer.untokenize(output[i])), xs[i])
+            # if i == 0:
+            #     self.writer.add_image('VALIDATION_predicted' + ''.join(self.tokenizer.untokenize(output[i])), xs[i])
 
         # Tensorboard 에 validation_loss 기록
         self.writer.add_scalar('Loss/Validation', (validation_loss/(idx+1)), iter_count) # loss 기록
