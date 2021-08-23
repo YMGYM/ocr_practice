@@ -15,15 +15,12 @@ class Tokenizer:
             self.word2id[c] = idx
             self.id2word[idx] = c
         
-        self.word2id['<SOS>'] = idx+1 # start token
-        self.word2id['<EOS>'] = idx+2 # end token
-        self.word2id['<PAD>'] = idx+3 # padding token
-        self.word2id['<UNK>'] = idx+4 # unknown token
+        self.word2id['<UNK>'] = idx + 1 # unknown token
+        self.word2id['<BLANK>'] = idx + 2 # CTC loss blank word
 
-        self.id2word[idx+1] = '<SOS>'
-        self.id2word[idx+2] = '<EOS>'
-        self.id2word[idx+3] = '<PAD>'
-        self.id2word[idx+4] = '<UNK>'
+        self.id2word[idx+1] = '<UNK>'
+        self.id2word[idx+2] = '<BLANK>'
+
 
     def encode(self, input_str): # dataset output을 토크나이즈함
 
