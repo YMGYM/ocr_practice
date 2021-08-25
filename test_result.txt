@@ -1,7 +1,7 @@
 /model 폴더에 모델 파일 결과 저장중
 
 
-===== 지금까지 모든 Model에 Teacher Force 를 False로 놓고 훈련함.... ===========
+===== im2Seq 결과 ===========
 state_big.pth : 파라미터 사이즈를 두 배로 증가시켜 훈련
 1.7대에서 Elbow Point 발생. (Aug09_21-54-40_jun-H81M-D2V)
 Training 데이터에서 학습 정체
@@ -9,5 +9,4 @@ Training 데이터에서 학습 정체
 state.pth : 기본 (Aug06_15-39-40_jun-H81M-D2V)
 state_cat : CNN 네트워크 결과를 매 sequecne 마다 더해줌
 
-
-state_long_cnn: 
+===== CRNN 결과 ==========

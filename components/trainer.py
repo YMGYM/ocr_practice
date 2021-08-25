@@ -1,3 +1,4 @@
+from .tokenizer import Tokenizer
 import torch
 from torch.utils.tensorboard import SummaryWriter
 """
@@ -14,7 +15,7 @@ trainer_params = {
     'seq_len': 10, # 모델의 sequence 길이
     'sent_interval': 10, # training 시에 문장 출력 에폭
     'optimizer_lr': 0.0001, # optimizer learning rate
-    'save_path' : './model/state.pth', # 모델 저장 경로
+    'save_path' : './model/state.pth', # 모델 저장 경로 -> 차차 오버라이딩됨
 }
 
 """ 하이퍼파라미터 설정 끝 """
@@ -29,9 +30,9 @@ class Trainer:
         self.criterion = criterion
         self.optimizer = optimizer(self.model.parameters(), lr=trainer_params['optimizer_lr'])
 
-        self.tokenizer = tokenizer # 토크나이저 설정
+        self.tokenizer = tokenizer
 
-        self.best_loss = 100
+        self.best_loss = 100 # 임의의 큰 값으로 입력
 
         # uniform 가중치 입력
         self.init_parameters()
@@ -70,14 +71,14 @@ class Trainer:
 
                 self.optimizer.zero_grad() # 그래디언트 파라미터를 0으로 설정
 
-                output = self.model(xs, ys, teacher_force=True) # model.forward
+                output = self.model(xs) # model.forward output : (10, batch, num_words)
 
-                new_output = output.permute(1,2,0)
+                seq_shape = torch.full(size=(output.shape[1],), fill_value=output.shape[0], dtype=torch.int32)
 
-                loss = self.criterion(new_output, ys) # evaluate loss
+                loss = self.criterion(output, ys, seq_shape, seq_shape) # evaluate loss
+
                 loss.backward() # backward pass
                 self.optimizer.step()
-
 
                 training_loss += loss.item()
 
@@ -95,10 +96,6 @@ class Trainer:
                     for i in range(2):
                         print(f"Answer : {original[i]} / Predicted : {''.join(self.tokenizer.untokenize(output[i]))}")
                         
-                        # Tensorboard 에 현재 상태 저장
-                        # if i == 0:
-                        #     self.writer.add_image('predicted' + ''.join(self.tokenizer.untokenize(output[i])), xs[i])
-
 
                     # Tensorboard 에 training_loss 기록
                     self.writer.add_scalar('Loss/Train', (training_loss / (idx+1)), idx*(epoch+1)) # loss 기록
@@ -118,11 +115,11 @@ class Trainer:
 
             self.optimizer.zero_grad() # 그래디언트 파라미터를 0으로 설정
 
-            output = self.model(xs, teacher_force=False) # model.forward
+            output = self.model(xs) # model.forward
 
-            new_output = output.permute(1,2,0)
+            seq_shape = torch.full(size=(output.shape[1],), fill_value=output.shape[0])
 
-            loss = self.criterion(new_output, ys) # evaluate loss
+            loss = self.criterion(output, ys, seq_shape, seq_shape) # evaluate loss
             validation_loss += loss.item()
 
             if idx > 2: break # 3번만 하고 브레이크
@@ -134,9 +131,7 @@ class Trainer:
         print("====== sentence ======")
         for i in range(5):
             print(f"Answer : {original[i]} / Predicted : {''.join(self.tokenizer.untokenize(output[i]))}")
-            # tensorboard에 현재 상태 저장
-            # if i == 0:
-            #     self.writer.add_image('VALIDATION_predicted' + ''.join(self.tokenizer.untokenize(output[i])), xs[i])
+            
 
         # Tensorboard 에 validation_loss 기록
         self.writer.add_scalar('Loss/Validation', (validation_loss/(idx+1)), iter_count) # loss 기록
