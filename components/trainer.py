@@ -14,8 +14,9 @@ trainer_params = {
     'is_string' : True, # 추론 결과물을 디코딩된 문장으로 반환할지, 토큰의 배열로 반환할지를 설정합니다.
     'seq_len': 10, # 모델의 sequence 길이
     'sent_interval': 10, # training 시에 문장 출력 에폭
-    'optimizer_lr': 0.0001, # optimizer learning rate
+    'optimizer_lr': 0.0005, # optimizer learning rate
     'save_path' : './model/state.pth', # 모델 저장 경로 -> 차차 오버라이딩됨
+    'is_save' : True,
 }
 
 """ 하이퍼파라미터 설정 끝 """
@@ -38,7 +39,8 @@ class Trainer:
         self.init_parameters()
 
         # tensorboard 객체 생성
-        self.writer = SummaryWriter()
+        if trainer_params['is_save']:
+            self.writer = SummaryWriter()
 
     def train_model(self, epoch_num=trainer_params['epoch_num'], log_interval = trainer_params['log_interval'], sent_interval = trainer_params['sent_interval'], save_path= trainer_params['save_path'], load_model=True):
 
@@ -65,18 +67,17 @@ class Trainer:
 
                 xs, original = data # 데이터 분리
 
-                ys = self.tokenizer.encode(original) # 데이터 인코딩
-
-                xs, ys = xs.to(self.device), ys.to(self.device)
+                ys, y_len = self.tokenizer.encode(original) # 데이터 인코딩
+                xs = xs.to(self.device)
 
                 self.optimizer.zero_grad() # 그래디언트 파라미터를 0으로 설정
 
                 output = self.model(xs) # model.forward output : (10, batch, num_words)
+                # print(output)
+                seq_shape = torch.full(size=(output.shape[1],), fill_value=trainer_params['seq_len'], dtype=torch.int32)
 
-                seq_shape = torch.full(size=(output.shape[1],), fill_value=output.shape[0], dtype=torch.int32)
-
-                loss = self.criterion(output, ys, seq_shape, seq_shape) # evaluate loss
-
+                loss = self.criterion(output, ys, seq_shape, y_len) # evaluate loss
+        
                 loss.backward() # backward pass
                 self.optimizer.step()
 
@@ -98,7 +99,8 @@ class Trainer:
                         
 
                     # Tensorboard 에 training_loss 기록
-                    self.writer.add_scalar('Loss/Train', (training_loss / (idx+1)), idx*(epoch+1)) # loss 기록
+                    if trainer_params['is_save']:
+                        self.writer.add_scalar('Loss/Train', (training_loss / (idx+1)), idx*(epoch+1)) # loss 기록
 
 
 
@@ -107,22 +109,25 @@ class Trainer:
         print("========== Start Validation ... ========== ")
         validation_loss = 0.0
         for idx, data in enumerate(self.val_dataset):
+
+            if idx > 2: break # 3번만 하고 브레이크
+
             xs, original = data # 데이터 분리
 
-            ys = self.tokenizer.encode(original) # 데이터 인코딩
+            ys, y_len = self.tokenizer.encode(original) # 데이터 인코딩
 
-            xs, ys = xs.to(self.device), ys.to(self.device)
-
+            xs = xs.to(self.device)
+            
             self.optimizer.zero_grad() # 그래디언트 파라미터를 0으로 설정
 
             output = self.model(xs) # model.forward
 
             seq_shape = torch.full(size=(output.shape[1],), fill_value=output.shape[0])
 
-            loss = self.criterion(output, ys, seq_shape, seq_shape) # evaluate loss
+            loss = self.criterion(output, ys, seq_shape, y_len) # evaluate loss
             validation_loss += loss.item()
 
-            if idx > 2: break # 3번만 하고 브레이크
+            
             
         print(f"validation loss : {(validation_loss/(idx+1)):0.5f}")
         output = output.permute(1,0,2).to('cpu') # 차원 변환 [batch, seq_len, class], cpu로 전송
@@ -134,7 +139,8 @@ class Trainer:
             
 
         # Tensorboard 에 validation_loss 기록
-        self.writer.add_scalar('Loss/Validation', (validation_loss/(idx+1)), iter_count) # loss 기록
+        if trainer_params['is_save']:
+            self.writer.add_scalar('Loss/Validation', (validation_loss/(idx+1)), iter_count) # loss 기록
 
 
         print("========== Finish Validation ========== ")

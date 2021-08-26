@@ -15,7 +15,7 @@ crnn_params = {
     'dropout_ratio': 0.5,
     'rnn_hidden_size': 256,
     'rnn_bidirectional': True, # bidirectional LSTM 사용 유무
-    'num_words': 1015, #  tokenizer의 word2id의 길이와 동일해야 함
+    'num_words': 1016, #  tokenizer의 word2id의 길이와 동일해야 함
 }
 
 """하이퍼파라미터 설정 종료"""
@@ -51,17 +51,17 @@ class CRNN(nn.Module):
         x = self.drop2(x) # (128, 10, 44)
 
         # flatten 실시
-        x = x.permute(0, 2, 1, 3)
-        x = x.reshape(-1, 10, 128*44) # rnn input에 맞게 변형
+        x = x.permute(2, 0, 1, 3) # (sequence:width, batch, filter, height)
+        x = torch.flatten(x, start_dim=2) # rnn input에 맞게 변형 : height 제거
 
         # rnn 통과
         x, _ = self.rnn1(x)
 
         # fc 통과
+        x = x.permute(1, 0, 2) # (batch, sequence, word_num)
         x = self.fc_out(x)
         
         # softmax 통과
-        x = F.log_softmax(x, 2)
-
-        x = x.permute(1,0,2) # (seq, batch, word_num)
+        x = x.permute(1, 0, 2)
+        x = F.log_softmax(x, 2) # (seq, batch, word_num)
         return x

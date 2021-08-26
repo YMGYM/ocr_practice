@@ -13,16 +13,18 @@ class Tokenizer:
 
         self.word2id['<BLANK>'] = 0 # CTC loss blank word
         self.word2id['<UNK>'] = 1 # unknown token
+        self.word2id['<PAD>'] = 2 # padding token
 
         self.id2word[0] = '<BLANK>'
         self.id2word[1] = '<UNK>'
+        self.id2word[2] = '<PAD>'
         
 
 
         # 글자를 한 글자씩 둘러보면서 사전에 저장
         for idx, c in enumerate(target_text):
-            self.word2id[c] = idx + 2
-            self.id2word[idx + 2] = c
+            self.word2id[c] = idx + 3
+            self.id2word[idx + 3] = c
         
         
 
@@ -30,6 +32,8 @@ class Tokenizer:
     def encode(self, input_str): # dataset output을 토크나이즈함
 
         result = []
+        sent_len = []
+
         for sent in input_str: # 배치를 1문장씩 쪼개서 반복
             sent = sent[:self.seq_len - 1] # input_str를 잘라서 최대 글자에 맞춘다.
             
@@ -41,21 +45,12 @@ class Tokenizer:
                 else: # 없으면 <UNK> 토큰 배정
                     token_sent.append(self.word2id['<UNK>'])
 
-            while(len(token_sent) < self.seq_len): # 예측 길이를 맞출때까지 입력
-                token_sent.append(self.word2id['<BLANK>'])
-
-            # 출력 데이터의 길이는 seq_len과 같아야 한다.
-            assert len(token_sent) == self.seq_len, f"token_sent len : {len(token_sent)}"
-            
-            if self.one_hot:
-                token_sent = F.one_hot(torch.tensor(token_sent), num_classes=len(self.word2id) + 1) # num_classes 는 0을 포함하므로 하나 더 더해주어야 한다.
-            else:
-                token_sent = torch.tensor(token_sent)
-
-            result.append(token_sent)
-
-        result = torch.stack(result) # torch tensor로 변환
-        return result
+            sent_len.append(len(token_sent)) # 현재 문장의 길이를 sent_len에 입력합니다.
+            result += token_sent
+        
+        sent_len = torch.tensor(sent_len, dtype=torch.int32)
+        result = torch.tensor(result, dtype=torch.int32)
+        return result, sent_len
 
     def __call__(self, input_str):
         return self.tokenize(input_str)
@@ -71,12 +66,6 @@ class Tokenizer:
             else: # 없으면 <UNK> 토큰 배정
                 result.append(self.word2id['<UNK>'])
 
-        while(len(result) < self.seq_len): # 예측 길이를 맞출때까지 입력
-            result.append(self.word2id['<BLANK>'])
-
-        # 출력 데이터의 길이는 seq_len과 같아야 한다.
-        assert len(result) == self.seq_len
-        
         if self.one_hot:
             result = F.one_hot(torch.tensor(result), num_classes=len(self.word2id) + 1) # num_classes 는 0을 포함하므로 하나 더 더해주어야 한다.
         else:
