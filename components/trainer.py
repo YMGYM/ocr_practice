@@ -81,17 +81,17 @@ class Trainer:
                 loss.backward() # backward pass
                 self.optimizer.step()
 
-                training_loss += loss.item()
+                # training_loss += loss.item()
 
                 if idx % log_interval == log_interval-1:
-                    print(f"Training Epoch [{epoch + 1}/{epoch_num}] iter : {idx + 1} loss: {(training_loss / (idx+1)):.3f}")
+                    print(f"Training Epoch [{epoch + 1}/{epoch_num}] iter : {idx + 1} loss: {loss.item():.3f}")
                     result = self.validation(idx*(epoch+1))
 
                     if result:
                         self.save_state(save_path, epoch, training_loss)
 
                 if idx % sent_interval == 0:
-                    print(f"Training Epoch [{epoch + 1}/{epoch_num}] iter : {idx + 1} loss: {(training_loss / (idx+1)):.3f}")
+                    print(f"Training Epoch [{epoch + 1}/{epoch_num}] iter : {idx + 1} loss: {loss.item():.3f}")
                     print("====== Train Sentence ======")
                     output = output.permute(1,0,2) # [batch, sequence, output_len]
                     for i in range(2):
@@ -100,7 +100,7 @@ class Trainer:
 
                     # Tensorboard 에 training_loss 기록
                     if trainer_params['is_save']:
-                        self.writer.add_scalar('Loss/Train', (training_loss / (idx+1)), idx*(epoch+1)) # loss 기록
+                        self.writer.add_scalar('Loss/Train', loss.item(), idx*(epoch+1)) # loss 기록
 
 
 
@@ -125,11 +125,11 @@ class Trainer:
             seq_shape = torch.full(size=(output.shape[1],), fill_value=output.shape[0])
 
             loss = self.criterion(output, ys, seq_shape, y_len) # evaluate loss
-            validation_loss += loss.item()
+            # validation_loss += loss.item()
 
             
             
-        print(f"validation loss : {(validation_loss/(idx+1)):0.5f}")
+        print(f"validation loss : {loss.item():0.5f}")
         output = output.permute(1,0,2).to('cpu') # 차원 변환 [batch, seq_len, class], cpu로 전송
 
 
@@ -140,14 +140,14 @@ class Trainer:
 
         # Tensorboard 에 validation_loss 기록
         if trainer_params['is_save']:
-            self.writer.add_scalar('Loss/Validation', (validation_loss/(idx+1)), iter_count) # loss 기록
+            self.writer.add_scalar('Loss/Validation', loss.item(), iter_count) # loss 기록
 
 
         print("========== Finish Validation ========== ")
 
 
-        if validation_loss / (idx+1) < self.best_loss:
-            self.best_loss = validation_loss / (idx+1)
+        if loss.item() < self.best_loss:
+            self.best_loss = loss.item()
             return True # 저장하라고 알림
         else:
             return False
