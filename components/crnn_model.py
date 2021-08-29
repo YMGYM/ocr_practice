@@ -15,6 +15,7 @@ crnn_params = {
     'dropout_ratio': 0.5,
     'rnn_hidden_size': 256,
     'rnn_bidirectional': True, # bidirectional LSTM 사용 유무
+    'rnn_num_layers': 2, # RNN 계층을 몇개 쌓을 것인지
     'num_words': 1016, #  tokenizer의 word2id의 길이와 동일해야 함
 }
 
@@ -36,29 +37,29 @@ class CRNN(nn.Module):
         self.drop2 = nn.Dropout(crnn_params['dropout_ratio'])
 
 
-        self.rnn1 = nn.GRU(input_size= 128 * 44, hidden_size = crnn_params['rnn_hidden_size'])
-        # rnn output : (10, batch, 256)
+        self.rnn1 = nn.GRU(input_size= 128 * 44, hidden_size = crnn_params['rnn_hidden_size'], batch_first=True, num_layers=crnn_params['rnn_num_layers'], bidirectional=crnn_params['rnn_bidirectional'])
+        # rnn output : (batch, 10, 256)
 
-        self.fc_out = nn.Linear(crnn_params['rnn_hidden_size'], crnn_params['num_words'])
-        # output : (10, batch, 1015)
+        self.fc_out = nn.Linear(crnn_params['rnn_hidden_size'] * 2, crnn_params['num_words'])
+        # output : (batch, 10, 1015)
 
     def forward(self, x):
         
         # cnn 통과
         x = self.pool(F.relu(self.conv1(x)))
-        x = self.drop1(x)
+        # x = self.drop1(x)
         x = F.relu(self.conv2(x))
-        x = self.drop2(x) # (128, 10, 44)
+        # x = self.drop2(x) # (128, 10, 44)
 
         # flatten 실시
-        x = x.permute(2, 0, 1, 3) # (sequence:width, batch, filter, height)
+        x = x.permute(0, 2, 1, 3) # (batch, width, filter, height)
         x = torch.flatten(x, start_dim=2) # rnn input에 맞게 변형 : height 제거
 
         # rnn 통과
         x, _ = self.rnn1(x)
 
         # fc 통과
-        x = x.permute(1, 0, 2) # (batch, sequence, word_num)
+        
         x = self.fc_out(x)
         
         # softmax 통과
