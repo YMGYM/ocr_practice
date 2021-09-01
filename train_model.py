@@ -15,9 +15,9 @@ params = {
     'epochs': 1000,
     'log_interval': 100, # validation 확인 정도
     'sent_interval': 10, # 학습 중 모델 인식 결과물을 찍어 보는 주기
-    'batch_size': 1024,
+    'batch_size': 512,
     'load_model': False, # 모델을 이어서 학습할 것인지
-    'save_path': './model/state_crnn.pth' # 모델 저장 위치
+    'save_path': './model/state_crnn_big.pth' # 모델 저장 위치
 }
 
 # 데이터셋 경로 설정 =============

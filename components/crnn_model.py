@@ -10,10 +10,10 @@ CRNN 모델을 구현합니다.
 crnn_params = {
     'conv1_out': 64,
     'conv1_kernel_size' : 5,
-    'conv2_out': 128,
+    'conv2_out': 256,
     'conv2_kernel_size': 5,
     'dropout_ratio': 0.5,
-    'rnn_hidden_size': 256,
+    'rnn_hidden_size': 512,
     'rnn_bidirectional': True, # bidirectional LSTM 사용 유무
     'rnn_num_layers': 2, # RNN 계층을 몇개 쌓을 것인지
     'num_words': 1016, #  tokenizer의 word2id의 길이와 동일해야 함
@@ -33,11 +33,11 @@ class CRNN(nn.Module):
         self.pool = nn.MaxPool2d(2, 2) # output = (64, 14, 48)
         self.drop1 = nn.Dropout(crnn_params['dropout_ratio'])
         self.conv2 = nn.Conv2d(crnn_params['conv1_out'], crnn_params['conv2_out'], crnn_params['conv2_kernel_size'])
-        # output = (128, 10, 44) : feature, width, height
+        # output = (256, 10, 44) : feature, width, height
         self.drop2 = nn.Dropout(crnn_params['dropout_ratio'])
 
 
-        self.rnn1 = nn.GRU(input_size= 128 * 44, hidden_size = crnn_params['rnn_hidden_size'], batch_first=True, num_layers=crnn_params['rnn_num_layers'], bidirectional=crnn_params['rnn_bidirectional'])
+        self.rnn1 = nn.GRU(input_size= 256 * 44, hidden_size = crnn_params['rnn_hidden_size'], batch_first=True, num_layers=crnn_params['rnn_num_layers'], bidirectional=crnn_params['rnn_bidirectional'])
         # rnn output : (batch, 10, 256)
 
         self.fc_out = nn.Linear(crnn_params['rnn_hidden_size'] * 2, crnn_params['num_words'])

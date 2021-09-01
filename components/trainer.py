@@ -101,6 +101,7 @@ class Trainer:
                     # Tensorboard 에 training_loss 기록
                     if trainer_params['is_save']:
                         self.writer.add_scalar('Loss/Train', loss.item(), idx*(epoch+1)) # loss 기록
+                        self.writer.add_text('Text/Train', f"Answer : {original[i]} / Predicted : {''.join(self.tokenizer.untokenize(output[i]))}", idx*(epoch+1))
 
 
 
@@ -141,6 +142,7 @@ class Trainer:
         # Tensorboard 에 validation_loss 기록
         if trainer_params['is_save']:
             self.writer.add_scalar('Loss/Validation', loss.item(), iter_count) # loss 기록
+            self.writer.add_text('Text/Validation', f"Answer : {original[i]} / Predicted : {''.join(self.tokenizer.untokenize(output[i]))}", iter_count)
 
 
         print("========== Finish Validation ========== ")
@@ -203,7 +205,7 @@ class Trainer:
 
     def init_parameters(self):
         for name, param in self.model.named_parameters():
-            torch.nn.init.uniform_(param.data, -0.08, 0.08)
+            torch.nn.init.uniform_(param.data, -0.04, 0.04)
 
 
     # 모델과 가중치를 load 합니다.
