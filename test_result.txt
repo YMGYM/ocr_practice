@@ -2,5 +2,8 @@
 
 ===== CRNN 결과 ==========
 LOSS : CTC LOSS 이므로 위와 다름
+
 state_crnn : 기본 CRNN 네트워크 (Conv2d 2개 -> GRU 2개 -> fc1개) 1.7
 (cnn_output : 128, rnn_output: 256)
+
+state_crnn_big : 위 네트워크에 파라미터 키움 (cnn_output : 256, rnn_output: 512)
