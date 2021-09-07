@@ -13,3 +13,5 @@ python train_model.py
 ```
 
 를 실행하여 모델 학습
+
+클래스별로 confusion matrix

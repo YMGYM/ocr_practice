@@ -6,6 +6,7 @@ from components.crnn_model import CRNN
 import torch
 import torch.nn as nn
 import pandas as pd
+import numpy as np
 
 from tqdm import tqdm
 """
@@ -70,14 +71,18 @@ if __name__ == "__main__":
         test_loss += loss.item()
         
         output = output.permute(1,0,2) # (batch, seq, word_len)
-        for idx, sent in enumerate(output):
-            result.append({'predict' : tokenizer.untokenize(sent), 'answer': original[idx]})
+        for i, sent in enumerate(output):
+            result.append({'predict' : tokenizer.untokenize(sent), 'answer': original[i]})
 
             
-    print(f"Test loss : {(loss.item() / len(test_dataset) ):0.5f}")
-
+    print(f"Test loss : {(test_loss / len(test_dataset) ):0.5f}")
     df = pd.DataFrame(result)
-    df.to_csv(params['result_path'])
-
+    df.to_csv(params['result_path']) # 데이터 저장
     print(f"Result Data was saved at {params['result_path']}")
+
+    accuracy = (df['predict'] == df['answer']).values.sum() / len(df)
+    print(f"accuarcy :{accuracy * 100}%")
+
+
+    
 
