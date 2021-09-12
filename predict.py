@@ -1,7 +1,9 @@
-from components.tokenizer import Tokenizer
-from components.crnn_model import CRNN
+from .components.tokenizer import Tokenizer
+from .components.crnn_model import CRNN
 from torchvision import transforms
 import torch
+from PIL import Image
+import numpy as np
 
 """
 학습된 모델을 불러와서 평가합니다.
@@ -9,8 +11,7 @@ import torch
 
 params = {
     'batch_size': 512,
-    'model_path': './model/state_crnn_big.pth', # 모델 저장 위치
-    'result_path': './result.csv',
+    'model_path': '../src/model/new_ocr/model/state_crnn_big.pth', # 모델 저장 위치
     'transform_resize_size' : (32, 100), # (h, w) 크기
     'transform_interpolation' : 0,
     'mean' : 0.5,
@@ -47,16 +48,16 @@ def crnn_predict(bbox):
     torch.no_grad()
 
     bboxes = []
+
     for box in bbox:
+        box = Image.fromarray(box)
         box = transforms(box)
-        bboxes.append(box)
-    
-    bboxes = torch.tensor(bboxes).to(device)
+        box = torch.tensor(np.expand_dims(box, axis=0)).to(device)
 
-    output = model(bboxes) # model.forward
+        output = model(box) # model.forward
+        output = output.permute(1,0,2)
+        result = tokenizer.decode(output)
 
-    output = output.permute(1,0,2)
-    result = tokenizer.decode(output)
+        bboxes.append(*result)
 
-
-    return result
+    return bboxes
