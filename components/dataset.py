@@ -7,7 +7,7 @@ from torchvision import transforms
 
 
 """ 하이퍼파라미터 설정 """
-transform_resize_size = (32, 100) # (h, w) 크기
+transform_resize_size = (32, 70) # (h, w) 크기
 transform_interpolation = 0 # Image.NEAREST (0), Image.LANCZOS (1), Image.BILINEAR (2), Image.BICUBIC (3), Image.BOX (4) or Image.HAMMING (5)
 mean, std = 0.5, 0.5 # Normalize 평균, 표준편차
 degree = 20 # 회전 각도
@@ -18,7 +18,6 @@ degree = 20 # 회전 각도
 """ transform 설정 """
 train_transforms = transforms.Compose([
     transforms.Resize(size=transform_resize_size, interpolation=transform_interpolation),
-    # transforms.RandomRotation(degree), # 이미지 데이터셋에 기본적으로 Rotation이 들어가 있어서 적용하지 않음
     transforms.Grayscale(),
     transforms.ToTensor(),
     transforms.Normalize(mean, std)

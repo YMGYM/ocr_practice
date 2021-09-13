@@ -16,7 +16,6 @@ params = {
     'transform_interpolation' : 0,
     'mean' : 0.5,
     'std' :  0.5, # Normalize 평균, 표준편차
-    'degree' : 20 # 회전 각도
 }
 
 
@@ -27,6 +26,7 @@ transforms = transforms.Compose([
     transforms.ToTensor(),
     transforms.Normalize(params['mean'], params['std']),
 ])
+
 
 # 학습에 필요한 파일 생성 ========
 tokenizer = Tokenizer(seq_len=10, one_hot=False)
