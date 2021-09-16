@@ -47,7 +47,7 @@ if __name__ == "__main__":
     result = []
 
     checkpoint = torch.load(params['model_path'])
-    model.load_state_dict(checkpoint['model_state_dict'])
+    model.load_state_dict(checkpoint['model_state_dict'], strict=False)
     model.to(device)
 
     model.eval()

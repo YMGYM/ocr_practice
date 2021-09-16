@@ -29,19 +29,19 @@ class CRNN(nn.Module):
         self.params = crnn_params
         self.conv1 = nn.Conv2d(1, crnn_params['conv1_out'], crnn_params['conv1_kernel_size']) # in_channels, out_channels, kernel_size, stride
         # output = (x + 2*paddint - dilation * (kernel_size - 1)-1) / stride + 1
-        # output = (64, 28, 76)
-        self.pool = nn.MaxPool2d(2, 2) # output = (64, 14, 38)
+        # output = (64, 28, 66)
+        self.pool = nn.MaxPool2d(2, 2) # output = (64, 14, 33)
         self.drop1 = nn.Dropout(crnn_params['dropout_ratio'])
         self.conv2 = nn.Conv2d(crnn_params['conv1_out'], crnn_params['conv2_out'], crnn_params['conv2_kernel_size'])
-        # output = (256, 10, 34) : feature, width, height
+        # output = (256, 10, 29) : feature, width, height
         self.drop2 = nn.Dropout(crnn_params['dropout_ratio'])
-        self.pool = nn.MaxPool2d(2, 2) # output = (256, 5, 17)
+        self.pool2 = nn.MaxPool2d(2, 2) # output = (256, 5, 14)
 
-        self.rnn1 = nn.GRU(input_size= 256 * 17, hidden_size = crnn_params['rnn_hidden_size'], batch_first=True, num_layers=crnn_params['rnn_num_layers'], bidirectional=crnn_params['rnn_bidirectional'])
-        # rnn output : (batch, 5, 256)
+        self.rnn1 = nn.GRU(input_size= 256 * 5, hidden_size = crnn_params['rnn_hidden_size'], batch_first=True, num_layers=crnn_params['rnn_num_layers'], bidirectional=crnn_params['rnn_bidirectional'])
+        # rnn output : (batch, 14, 256)
 
         self.fc_out = nn.Linear(crnn_params['rnn_hidden_size'] * 2, crnn_params['num_words'])
-        # output : (batch, 5, 1015)
+        # output : (batch, 14, 1015)
 
     def forward(self, x):
         
@@ -49,12 +49,11 @@ class CRNN(nn.Module):
         x = self.pool(F.relu(self.conv1(x)))
         x = self.drop1(x)
         x = self.pool2(F.relu(self.conv2(x)))
-        x = self.drop2(x) # (128, 10, 44)
+        x = self.drop2(x) # (256, 5, 14)
 
         # flatten 실시
-        x = x.permute(0, 2, 1, 3) # (batch, width, filter, height)
+        x = x.permute(0, 3, 1, 2) # (batch, width, filter, height)
         x = torch.flatten(x, start_dim=2) # rnn input에 맞게 변형 : height 제거
-
         # rnn 통과
         x, _ = self.rnn1(x)
 
