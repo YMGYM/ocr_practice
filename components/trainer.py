@@ -1,6 +1,8 @@
 from .tokenizer import Tokenizer
 import torch
 from torch.utils.tensorboard import SummaryWriter
+import torch.optim.lr_scheduler as lr_scheduler
+
 """
 Trainer
 생성된 모든 객체들을 입력으로 받아 모델을 학습시킵니다.
@@ -12,11 +14,12 @@ trainer_params = {
     'epoch_num': 100, # 학습시킬 에폭 수
     'log_interval': 100, # 로그 찍어볼 미니배치 반복 수
     'is_string' : True, # 추론 결과물을 디코딩된 문장으로 반환할지, 토큰의 배열로 반환할지를 설정합니다.
-    'seq_len': 10, # 모델의 sequence 길이
+    'seq_len': 14, # 모델의 sequence 길이
     'sent_interval': 10, # training 시에 문장 출력 에폭
     'optimizer_lr': 0.0001, # optimizer learning rate
     'save_path' : './model/state.pth', # 모델 저장 경로 -> 차차 오버라이딩됨
     'is_save' : True,
+    'use_scheduler': False,
 }
 
 """ 하이퍼파라미터 설정 끝 """
@@ -41,6 +44,9 @@ class Trainer:
         # tensorboard 객체 생성
         if trainer_params['is_save']:
             self.writer = SummaryWriter()
+
+        if trainer_params['use_scheduler']:
+            self.scheduler = lr_scheduler.LambdaLR(optimizer = self.optimizer, lr_lambda= lambda epoch: 0.95 ** epoch, verbose=True)
 
     def train_model(self, epoch_num=trainer_params['epoch_num'], log_interval = trainer_params['log_interval'], sent_interval = trainer_params['sent_interval'], save_path= trainer_params['save_path'], load_model=True):
 
@@ -72,7 +78,7 @@ class Trainer:
 
                 self.optimizer.zero_grad() # 그래디언트 파라미터를 0으로 설정
 
-                output = self.model(xs) # model.forward output : (10, batch, num_words)
+                output = self.model(xs) # model.forward output : (14, batch, num_words)
                 # print(output)
                 seq_shape = torch.full(size=(output.shape[1],), fill_value=trainer_params['seq_len'], dtype=torch.int32)
 
@@ -100,10 +106,28 @@ class Trainer:
 
                     # Tensorboard 에 training_loss 기록
                     if trainer_params['is_save']:
-                        self.writer.add_scalar('Loss/Train', loss.item(), idx*(epoch+1)) # loss 기록
+                        self.writer.add_scalar('Loss/Train', loss.item(), (idx)*(epoch+1)) # loss 기록
                         self.writer.add_text('Text/Train', f"Answer : {original[i]} / Predicted : {''.join(self.tokenizer.untokenize(output[i]))}", idx*(epoch+1))
 
-
+            if trainer_params['use_scheduler']:
+                self.scheduler.step()
+                
+        # 모든 반복이 끝나면 validation loss와 현재 파라미터를 텐서보드에 기록합니다.
+        if trainer_params['is_save']:
+            self.writer.add_hparams({
+                'lr': trainer_params['optimizer_lr'],
+                'cnn 1 output': self.model.params['conv1_out'],
+                'cnn 2 output': self.model.params['conv2_out'],
+                'cnn 1 kernel': self.model.params['conv1_kernel_size'],
+                'cnn 2 kernel': self.model.params['conv2_kernel_size'],
+                'dropout': self.model.params['dropout_ratio'],
+                'rnn hidden': self.model.params['rnn_hidden_size'],
+                'rnn bi': self.model.params['rnn_bidirectional'],
+                'rnn layers': self.model.params['rnn_num_layers']
+            },
+            {
+                'hparam/loss': self.best_loss
+            })
 
     def validation(self, iter_count):
         self.model.eval()
