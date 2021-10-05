@@ -10,8 +10,6 @@ from torchvision import transforms
 transform_resize_size = (32, 70) # (h, w) 크기
 transform_interpolation = 0 # Image.NEAREST (0), Image.LANCZOS (1), Image.BILINEAR (2), Image.BICUBIC (3), Image.BOX (4) or Image.HAMMING (5)
 mean, std = 0.5, 0.5 # Normalize 평균, 표준편차
-degree = 20 # 회전 각도
-
 """ 하이퍼파라미터 끝 """
 
 

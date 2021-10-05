@@ -10,7 +10,6 @@ import numpy as np
 """
 
 params = {
-    'batch_size': 512,
     'model_path': '../src/model/new_ocr/model/model_drop.pth', # 모델 저장 위치
     'transform_resize_size' : (32, 70), # (h, w) 크기
     'transform_interpolation' : 0,
@@ -24,12 +23,12 @@ transforms = transforms.Compose([
     transforms.Resize(size=params['transform_resize_size'], interpolation=params['transform_interpolation']),
     transforms.Grayscale(),
     transforms.ToTensor(),
-    transforms.Normalize(params['mean'], params['std']),
+    transforms.Normalize((params['mean'],), (params['std'],)),
 ])
 
 
 # 학습에 필요한 파일 생성 ========
-tokenizer = Tokenizer(seq_len=10, one_hot=False)
+tokenizer = Tokenizer(seq_len=15, one_hot=False)
 model = CRNN()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 checkpoint = torch.load(params['model_path'])
