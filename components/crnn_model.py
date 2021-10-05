@@ -9,7 +9,7 @@ CRNN 모델을 구현합니다.
 """하이퍼파라미터 설정"""
 crnn_params = {
     'conv1_out': 128,
-    'conv1_kernel_size' : 3,
+    'conv1_kernel_size' : 5,
     'conv2_out': 512,
     'conv2_kernel_size': 3,
     'dropout_ratio': 0.5,
@@ -29,19 +29,19 @@ class CRNN(nn.Module):
         self.params = crnn_params
         self.conv1 = nn.Conv2d(1, crnn_params['conv1_out'], crnn_params['conv1_kernel_size']) # in_channels, out_channels, kernel_size, stride
         # output = (x + 2*paddint - dilation * (kernel_size - 1)-1) / stride + 1
-        # output = (64, 30, 68)
-        self.pool = nn.MaxPool2d(2, 2) # output = (64, 15, 34)
+        # output = (64, 28, 66)
+        self.pool = nn.MaxPool2d(2, 2) # output = (64, 14, 33)
         self.drop1 = nn.Dropout(crnn_params['dropout_ratio'])
         self.conv2 = nn.Conv2d(crnn_params['conv1_out'], crnn_params['conv2_out'], crnn_params['conv2_kernel_size'])
-        # output = (256, 13, 32) : feature, height, width
+        # output = (256, 12, 31) : feature, height, width
         self.drop2 = nn.Dropout(crnn_params['dropout_ratio'])
-        self.pool2 = nn.MaxPool2d(2, 2) # output = (256, 6, 16)
+        self.pool2 = nn.MaxPool2d(2, 2) # output = (256, 6, 15)
 
         self.rnn1 = nn.GRU(input_size= 512 * 6, hidden_size = crnn_params['rnn_hidden_size'], batch_first=True, num_layers=crnn_params['rnn_num_layers'], bidirectional=crnn_params['rnn_bidirectional'])
-        # rnn output : (batch, 16, rnn_hidden_size)
+        # rnn output : (batch, 15, rnn_hidden_size)
 
         self.fc_out = nn.Linear(crnn_params['rnn_hidden_size'] * 2, crnn_params['num_words'])
-        # output : (batch, 16, 1482)
+        # output : (batch, 15, 1482)
 
     def forward(self, x):
         

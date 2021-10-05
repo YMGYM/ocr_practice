@@ -14,7 +14,7 @@ trainer_params = {
     'epoch_num': 100, # 학습시킬 에폭 수
     'log_interval': 100, # 로그 찍어볼 미니배치 반복 수
     'is_string' : True, # 추론 결과물을 디코딩된 문장으로 반환할지, 토큰의 배열로 반환할지를 설정합니다.
-    'seq_len': 16 , # 모델의 sequence 길이
+    'seq_len': 15 , # 모델의 sequence 길이
     'sent_interval': 10, # training 시에 문장 출력 에폭
     'optimizer_lr': 0.0001, # optimizer learning rate
     'save_path' : './model/state.pth', # 모델 저장 경로 -> 차차 오버라이딩됨

@@ -15,7 +15,7 @@ from tqdm import tqdm
 
 params = {
     'batch_size': 512,
-    'model_path': './model/state_crnn_big.pth', # 모델 저장 위치
+    'model_path': './model/model_drop.pth', # 모델 저장 위치
     'result_path': './result.csv'
 }
 
