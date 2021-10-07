@@ -15,13 +15,13 @@ from tqdm import tqdm
 
 params = {
     'batch_size': 512,
-    'model_path': './model/model_drop.pth', # 모델 저장 위치
-    'result_path': './result.csv'
+    'model_path': './model/model_font_fit.pth', # 모델 저장 위치
+    'result_path': './result_test_font.csv'
 }
 
 # 데이터셋 경로 설정 =============
 base_dir = '../soma/font/dataset/'
-test_dir = base_dir + 'test_dict/'
+test_dir = base_dir + 'testing/'
 # ===========================
 
 # 데이터셋 생성 ================

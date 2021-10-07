@@ -10,7 +10,7 @@ import numpy as np
 """
 
 params = {
-    'model_path': '../src/model/new_ocr/model/model_drop.pth', # 모델 저장 위치
+    'model_path': '../src/model/new_ocr/model/model_font_fit.pth', # 모델 저장 위치
     'transform_resize_size' : (32, 70), # (h, w) 크기
     'transform_interpolation' : 0,
     'mean' : 0.5,
