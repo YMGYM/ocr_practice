@@ -12,10 +12,10 @@ crnn_params = {
     'conv1_kernel_size' : 5,
     'conv2_out': 512,
     'conv2_kernel_size': 3,
-    'dropout_ratio': 0.5,
+    'dropout_ratio': 0.65,
     'rnn_hidden_size': 1024,
     'rnn_bidirectional': True, # bidirectional LSTM 사용 유무
-    'rnn_num_layers': 2, # RNN 계층을 몇개 쌓을 것인지
+    'rnn_num_layers': 3, # RNN 계층을 몇개 쌓을 것인지
     'num_words': 1482, #  tokenizer의 word2id의 길이와 동일해야 함
 }
 

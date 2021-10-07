@@ -22,8 +22,8 @@ params = {
 
 # 데이터셋 경로 설정 =============
 base_dir = '../soma/font/dataset/'
-train_dir = base_dir + 'train_dict_small/'
-val_dir = base_dir + 'val_dict_small/'
+train_dir = base_dir + 'train_dict_small_nonNoise/'
+val_dir = base_dir + 'val_dict_small_nonNoise/'
 # ===========================
 
 
