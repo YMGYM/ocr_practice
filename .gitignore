@@ -1,4 +1,5 @@
 model
 .DS_Store
 runs
+wandb
 dataset/files

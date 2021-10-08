@@ -6,24 +6,9 @@ import torch.nn.functional as F
 CRNN 모델을 구현합니다.
 """
 
-"""하이퍼파라미터 설정"""
-crnn_params = {
-    'conv1_out': 128,
-    'conv1_kernel_size' : 5,
-    'conv2_out': 512,
-    'conv2_kernel_size': 3,
-    'dropout_ratio': 0.65,
-    'rnn_hidden_size': 1024,
-    'rnn_bidirectional': True, # bidirectional LSTM 사용 유무
-    'rnn_num_layers': 3, # RNN 계층을 몇개 쌓을 것인지
-    'num_words': 1482, #  tokenizer의 word2id의 길이와 동일해야 함
-}
-
-"""하이퍼파라미터 설정 종료"""
-
 class CRNN(nn.Module):
-
-    def __init__(self, crnn_params=crnn_params):
+    
+    def __init__(self, crnn_params):
         super(CRNN, self).__init__()
 
         self.params = crnn_params
@@ -37,7 +22,7 @@ class CRNN(nn.Module):
         self.drop2 = nn.Dropout(crnn_params['dropout_ratio'])
         self.pool2 = nn.MaxPool2d(2, 2) # output = (256, 6, 15)
 
-        self.rnn1 = nn.GRU(input_size= 512 * 6, hidden_size = crnn_params['rnn_hidden_size'], batch_first=True, num_layers=crnn_params['rnn_num_layers'], bidirectional=crnn_params['rnn_bidirectional'])
+        self.rnn1 = nn.GRU(input_size= crnn_params['conv2_out'] * 6, hidden_size = crnn_params['rnn_hidden_size'], batch_first=True, num_layers=crnn_params['rnn_num_layers'], bidirectional=crnn_params['rnn_bidirectional'])
         # rnn output : (batch, 15, rnn_hidden_size)
 
         self.fc_out = nn.Linear(crnn_params['rnn_hidden_size'] * 2, crnn_params['num_words'])

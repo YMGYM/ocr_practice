@@ -2,7 +2,7 @@ from components.dataset import OcrDataset # OCR용 데이터셋
 from torch.utils.data import DataLoader # 멀티배치 학습을 위한 데이터로더
 from components.tokenizer import Tokenizer
 from components.trainer import Trainer
-from components.crnn_model import CRNN
+
 
 import torch.optim as optim
 import torch.nn as nn
@@ -12,7 +12,7 @@ import torch.nn as nn
 """
 
 params = {
-    'epochs': 60,
+    'epochs': 20,
     'log_interval': 40, # validation 확인 정도
     'sent_interval': 10, # 학습 중 모델 인식 결과물을 찍어 보는 주기
     'batch_size': 512,
@@ -23,7 +23,7 @@ params = {
 # 데이터셋 경로 설정 =============
 base_dir = '../soma/font/dataset/'
 train_dir = base_dir + 'train_dict_small_nonNoise/'
-val_dir = base_dir + 'val_dict_small_nonNoise/'
+val_dir = base_dir + 'val_dict_small_nonNoise'
 # ===========================
 
 
@@ -36,11 +36,10 @@ val_dataset = DataLoader(val_ocr, batch_size=params['batch_size'], shuffle=True)
 # ===========================
 
 # 학습에 필요한 파일 생성 ========
-tokenizer = Tokenizer(seq_len=10, one_hot=False)
-model = CRNN()
+tokenizer = Tokenizer(seq_len=15, one_hot=False)
 criterion = nn.CTCLoss()
 optimizer = optim.Adam # 클래스 정보만 넘겨줌
-trainer = Trainer(model, train_dataset, val_dataset, criterion, optimizer, tokenizer )
+trainer = Trainer(train_dataset, val_dataset, criterion, optimizer, tokenizer )
 # ==========================
 
 if __name__ == "__main__":
