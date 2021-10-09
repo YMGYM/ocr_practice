@@ -6,8 +6,9 @@ import torch.nn.functional as F
 CRNN 모델을 구현합니다.
 """
 
+
 class CRNN(nn.Module):
-    
+
     def __init__(self, crnn_params):
         super(CRNN, self).__init__()
 
