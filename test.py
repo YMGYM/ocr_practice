@@ -19,6 +19,19 @@ params = {
     'result_path': './result_test_font.csv'
 }
 
+crnn_params = {
+    'conv1_out': 128,
+    'conv1_kernel_size' : 5,
+    'conv2_out': 128,
+    'conv2_kernel_size': 3,
+    'dropout_ratio': 0.4694,
+    'rnn_hidden_size': 1024,
+    'rnn_bidirectional': True, # bidirectional LSTM 사용 유무
+    'rnn_num_layers': 3, # RNN 계층을 몇개 쌓을 것인지
+    'num_words': 1482, #  tokenizer의 word2id의 길이와 동일해야 함
+}
+
+
 # 데이터셋 경로 설정 =============
 base_dir = '../soma/font/dataset/'
 test_dir = base_dir + 'testing/'
@@ -31,7 +44,7 @@ test_dataset = DataLoader(test_ocr, batch_size=params['batch_size'], shuffle=Tru
 
 # 학습에 필요한 파일 생성 ========
 tokenizer = Tokenizer(seq_len=10, one_hot=False)
-model = CRNN()
+model = CRNN(crnn_params)
 criterion = nn.CTCLoss()
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 # ==========================
