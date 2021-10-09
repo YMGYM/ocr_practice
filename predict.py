@@ -26,10 +26,22 @@ transforms = transforms.Compose([
     transforms.Normalize((params['mean'],), (params['std'],)),
 ])
 
+crnn_params = {
+    'conv1_out': 128,
+    'conv1_kernel_size' : 5,
+    'conv2_out': 128,
+    'conv2_kernel_size': 3,
+    'dropout_ratio': 0.4694,
+    'rnn_hidden_size': 1024,
+    'rnn_bidirectional': True, # bidirectional LSTM 사용 유무
+    'rnn_num_layers': 3, # RNN 계층을 몇개 쌓을 것인지
+    'num_words': 1482, #  tokenizer의 word2id의 길이와 동일해야 함
+}
+
 
 # 학습에 필요한 파일 생성 ========
 tokenizer = Tokenizer(seq_len=15, one_hot=False)
-model = CRNN()
+model = CRNN(crnn_params)
 device = 'cuda' if torch.cuda.is_available() else 'cpu'
 checkpoint = torch.load(params['model_path'])
 model.load_state_dict(checkpoint['model_state_dict'])
