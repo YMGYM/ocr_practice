@@ -3,3 +3,4 @@ model
 runs
 wandb
 dataset/files
+EDA/make_test_dataset.ipynb

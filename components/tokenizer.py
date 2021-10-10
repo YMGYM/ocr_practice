@@ -7,6 +7,7 @@ target_text = ' !"#%\'()*+,-./0123456789:<>?ABCDEFGKLMNOPQRSTUVXYZ[]^acdeghiklmn
 
 class Tokenizer:
     def __init__(self, seq_len = 14, one_hot = False):
+        self.target_text = target_text
         self.seq_len = seq_len
         self.one_hot = one_hot
         self.word2id = {}
@@ -119,3 +120,18 @@ class Tokenizer:
         result = re.sub(r"<BLANK>","",result)
                 
         return result
+
+    
+    def make_answer_word(self, sent):
+        # 입력받은 정답 단어에서 없는 글자만 UNK 토큰으로 변경합니다.
+        # 정답 데이터를 유추할 때 사용할 예정.
+        # 중복 제거 리펙토링이 필요할 것 같습니다.
+
+        translated_sent = ""
+        for c in sent:
+                if self.word2id.get(c) is not None: # 사전에 글자가 있으면 토크나이징
+                    translated_sent += c
+                else: # 없으면 <UNK> 토큰 배정
+                    translated_sent += '<UNK>'
+                    
+        return translated_sent
