@@ -1,5 +1,5 @@
-from .components.tokenizer import Tokenizer
-from .components.crnn_model import CRNN
+from components.tokenizer import Tokenizer
+from components.crnn_model import CRNN
 from torchvision import transforms
 import torch
 from PIL import Image
@@ -10,7 +10,8 @@ import numpy as np
 """
 
 params = {
-    'model_path': '../src/model/new_ocr/model/model_font_fit.pth', # 모델 저장 위치
+    # 'model_path': '../src/model/new_ocr/model/model_font_fit.pth', # 모델 저장 위치
+    'model_path': 'model/model_font_fit.pth',
     'transform_resize_size' : (32, 70), # (h, w) 크기
     'transform_interpolation' : 0,
     'mean' : 0.5,
