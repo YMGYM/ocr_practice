@@ -1,6 +1,7 @@
 import os, sys
 from PIL import Image
 import numpy as np
+from torch.functional import norm
 
 from torch.utils.data import Dataset
 from torchvision import transforms
@@ -25,6 +26,7 @@ train_transforms = transforms.Compose([
 
 val_transforms = transforms.Compose([
     transforms.Resize(size=transform_resize_size, interpolation=transform_interpolation),
+    transforms.Grayscale(),
     transforms.ToTensor(),
     transforms.Normalize(mean, std),
 ])
@@ -78,8 +80,11 @@ class OcrDataset(Dataset):
             img2 = np.full_like(norm_gray, 255, np.uint8)
             _ = cv2.drawContours(img2, contours, -1, (0,0,0), cv2.FILLED)
 
-            img = img2
-            
+            if img2[0,0] == 0:
+                img2 = 255-img2
+
+            img = Image.fromarray(img2)
+
         img = self.transforms(img) # 이미지 변형 적용
 
         x = np.array(img) # 변형된 이미지

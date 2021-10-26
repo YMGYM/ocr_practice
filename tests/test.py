@@ -1,4 +1,5 @@
-from os import ctermid
+import sys
+sys.path.append('../minjun_ocr')
 from collections import Counter
 
 from components.dataset import OcrDataset # OCR용 데이터셋
