@@ -5,6 +5,8 @@ import numpy as np
 from torch.utils.data import Dataset
 from torchvision import transforms
 
+import cv2
+
 
 """ 하이퍼파라미터 설정 """
 transform_resize_size = (32, 70) # (h, w) 크기
@@ -23,7 +25,6 @@ train_transforms = transforms.Compose([
 
 val_transforms = transforms.Compose([
     transforms.Resize(size=transform_resize_size, interpolation=transform_interpolation),
-    transforms.Grayscale(),
     transforms.ToTensor(),
     transforms.Normalize(mean, std),
 ])
@@ -60,6 +61,25 @@ class OcrDataset(Dataset):
     def __getitem__(self, idx):
         target = self.datas[idx]
         img = Image.open(self.data_dir + '/' + target)
+
+        if self.isVal: # 
+            img_np = np.array(img)
+            gray = cv2.cvtColor(img_np, cv2.COLOR_BGR2GRAY)
+            norm_gray = (((gray - gray.min())/(gray.max() - gray.min()))*255).astype(np.uint8)
+
+            # threshold
+            thresh = cv2.threshold(norm_gray, -1, 255, cv2.THRESH_TOZERO | cv2.THRESH_OTSU)[1]
+
+            # get the (largest) contour
+            contours = cv2.findContours(thresh, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_SIMPLE)
+            contours = contours[0] if len(contours) == 2 else contours[1]
+
+            # draw white filled contour on black background
+            img2 = np.full_like(norm_gray, 255, np.uint8)
+            _ = cv2.drawContours(img2, contours, -1, (0,0,0), cv2.FILLED)
+
+            img = img2
+            
         img = self.transforms(img) # 이미지 변형 적용
 
         x = np.array(img) # 변형된 이미지
