@@ -4,6 +4,7 @@ from torchvision import transforms
 import torch
 from PIL import Image
 import numpy as np
+import cv2
 
 """
 학습된 모델을 불러와서 평가합니다.
@@ -56,6 +57,7 @@ def crnn_predict(bbox):
     text_image는 bbox 단위로 crop된 글자 이미지 배열이 들어갑니다. (단일 컷의 모든 bounding box입니다.)
 
     """
+
     model.eval()
     torch.no_grad()
 
@@ -63,6 +65,27 @@ def crnn_predict(bbox):
 
     for box in bbox:
         box = Image.fromarray(box)
+
+        """
+        데이터를 인식하기 쉽게 전처리
+        """
+        gray = cv2.cvtColor(box, cv2.COLOR_BGR2GRAY)
+        norm_gray = (((gray - gray.min())/(gray.max() - gray.min()))*255).astype(np.uint8)
+
+        # threshold
+        thresh = cv2.threshold(norm_gray, -1, 255, cv2.THRESH_TOZERO | cv2.THRESH_OTSU)[1]
+
+        # get the (largest) contour
+        contours = cv2.findContours(thresh, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
+        contours = contours[0] if len(contours) == 2 else contours[1]
+
+        # draw white filled contour on black background
+        box = np.full_like(norm_gray, 255, np.uint8)
+        _ = cv2.drawContours(box, contours, -1, (0,0,0), -1)
+
+        if box[0,0] == 0:
+            box = 255-box
+
         box = transforms(box)
         box = torch.tensor(np.expand_dims(box, axis=0)).to(device)
 
