@@ -1,5 +1,5 @@
-from components.tokenizer import Tokenizer
-from components.crnn_model import CRNN
+from .components.tokenizer import Tokenizer
+from .components.crnn_model import CRNN
 from torchvision import transforms
 import torch
 from PIL import Image
@@ -11,8 +11,7 @@ import cv2
 """
 
 params = {
-    # 'model_path': '../src/model/new_ocr/model/model_font_fit.pth', # 모델 저장 위치
-    'model_path': 'model/model_font_fit.pth',
+    'model_path': '../src/model/new_ocr/model/model_font_fit.pth', # 모델 저장 위치
     'transform_resize_size' : (32, 70), # (h, w) 크기
     'transform_interpolation' : 0,
     'mean' : 0.5,
@@ -67,20 +66,19 @@ def crnn_predict(bbox):
         """
         데이터를 인식하기 쉽게 전처리
         """
-        gray = cv2.cvtColor(box, cv2.COLOR_BGR2GRAY)
-        norm_gray = (((gray - gray.min())/(gray.max() - gray.min()))*255).astype(np.uint8)
-
-        # threshold
+        gray = cv2.cvtColor(box, cv2.COLOR_BGR2GRAY) # 흑백으로 변환
+        norm_gray = (((gray - gray.min())/(gray.max() - gray.min()))*255).astype(np.uint8) # 이미지를 흰색과 검정색의 영역으로 정규화함
+ 
+        # threshold를 구해서 경계선 구함
         thresh = cv2.threshold(norm_gray, -1, 255, cv2.THRESH_TOZERO | cv2.THRESH_OTSU)[1]
-
-        # get the (largest) contour
         contours = cv2.findContours(thresh, cv2.RETR_CCOMP, cv2.CHAIN_APPROX_NONE)
         contours = contours[0] if len(contours) == 2 else contours[1]
 
-        # draw white filled contour on black background
+        # 경계선 채우기
         box = np.full_like(norm_gray, 255, np.uint8)
         _ = cv2.drawContours(box, contours, -1, (0,0,0), -1)
 
+        # 배경이 검정색이면 색 반전
         if box[0,0] == 0:
             box = 255-box
 
