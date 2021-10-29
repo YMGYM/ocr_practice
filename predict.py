@@ -64,8 +64,6 @@ def crnn_predict(bbox):
     bboxes = []
 
     for box in bbox:
-        box = Image.fromarray(box)
-
         """
         데이터를 인식하기 쉽게 전처리
         """
@@ -86,6 +84,7 @@ def crnn_predict(bbox):
         if box[0,0] == 0:
             box = 255-box
 
+        box = Image.fromarray(box)
         box = transforms(box)
         box = torch.tensor(np.expand_dims(box, axis=0)).to(device)
 
