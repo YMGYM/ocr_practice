@@ -1,17 +1,23 @@
-from .components.tokenizer import Tokenizer
-from .components.crnn_model import CRNN
+import sys, os
+from pathlib import Path
+sys.path.append(str(Path(__file__).parents[0]))
+
+from components.tokenizer import Tokenizer
+from components.crnn_model import CRNN
 from torchvision import transforms
 import torch
 from PIL import Image
 import numpy as np
 import cv2
+import sys, os
+from pathlib import Path
+
 
 """
 학습된 모델을 불러와서 평가합니다.
 """
-
 params = {
-    'model_path': '../src/model/new_ocr/model/model_font_fit.pth', # 모델 저장 위치
+    'model_path': os.path.join(Path(__file__).parents[0], "model/model_font_fit.pth"), # 모델 저장 위치
     'transform_resize_size' : (32, 70), # (h, w) 크기
     'transform_interpolation' : 0,
     'mean' : 0.5,
