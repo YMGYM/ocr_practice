@@ -108,17 +108,14 @@ if __name__ == "__main__":
         for charIdx, char in enumerate(row[1]['original']):
             if char in tokenizer.target_text:
                 totalCounter[char] += 1
-                if charIdx < len(row[1]['predict']):
-                    if char == row[1]['predict'][charIdx]: # 정답인경우
-                        trueCounter[char] += 1
-                    else:
-                        falseCounter[char] += 1
+
+                if char in row[1]['predict']: # 정답인경우
+                    trueCounter[char] += 1
                 else:
                     falseCounter[char] += 1
             else:
                 totalCounter['<OOV>'] += 1
                 falseCounter['<OOV>'] += 1
-
     print(f"accuracy(character) :{sum(trueCounter.values())/sum(totalCounter.values()) * 100}%")
     
 
