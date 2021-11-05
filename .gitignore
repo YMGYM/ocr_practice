@@ -5,3 +5,4 @@ wandb
 dataset/files
 EDA/make_test_dataset.ipynb
 __pycache__
+components/__pycache__
